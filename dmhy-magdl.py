@@ -54,7 +54,6 @@ def query(keyword):
 
 
 def ask(choices):
-    import code; code.interact(local=locals())
     for idx, item in enumerate(choices):
         num = t.red(str(idx+1).rjust(2))
         title = t.yellow(item['title'])
