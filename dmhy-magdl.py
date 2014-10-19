@@ -49,10 +49,12 @@ def query(keyword):
             date=date, 
             magnet=node.find("enclosure[@type='application/x-bittorrent']").get('url'))
     items = map(_build_item, root.findall('channel/item'))
+    items = filter(lambda x: x['title'], items)
     return items[:24]
 
 
 def ask(choices):
+    import code; code.interact(local=locals())
     for idx, item in enumerate(choices):
         num = t.red(str(idx+1).rjust(2))
         title = t.yellow(item['title'])
