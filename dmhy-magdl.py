@@ -40,7 +40,7 @@ def query(keyword):
                                           '%a, %d %b %Y %H:%M:%S +0800')
         return dict(
             title=node.find('title').text,
-            date=date.strftime('%Y/%y/%m/%d %H:%M'),
+            date=date.strftime('%Y/%m/%d %H:%M'),
             magnet=node.find("enclosure[@type='application/x-bittorrent']").get('url'))
     items = map(_build_item, root.findall('channel/item'))
     items = list(filter(lambda x: x['title'], items))
