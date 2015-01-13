@@ -1,22 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 # dmhy-magdl.py -- command-downloader for share.dmhy.org
+# originally from my friend @dannvix
+# modified by @xatier
+# https://gist.github.com/dannvix/bcdbc83a880728f658cb
 
+import datetime
 import sys
-import urllib
-import urllib2
-from datetime import datetime, timedelta
+import urllib.parse
+import urllib.request
 import webbrowser
-import xml.etree.ElementTree as ElementTree
+import xml.etree.ElementTree
 
-try:
-    from babel.dates import format_timedelta
-except:
-    format_timedelta = None
-
+# colorize the output
 try:
     from blessings import Terminal
-except ImportError, e:
+except ImportError as e:
     class Terminal(object):
         def __getattr__(self, name):
             def _missing(*args, **kwargs):
@@ -27,30 +26,29 @@ except ImportError, e:
 # globals
 t = Terminal()
 
-
 def query(keyword):
     url = 'http://share.dmhy.org/topics/rss'
-    params = urllib.urlencode(dict(keyword=keyword))
-    request = '%s?%s' % (url, params)
-    response = urllib2.urlopen(request)
-    xml = response.read()
+    params = urllib.parse.urlencode(dict(keyword=keyword))
+    xmldoc = urllib.request.urlopen('{}?{}'.format(url, params)).read()
 
     # parsing items
-    root = ElementTree.fromstring(xml)
+    root = xml.etree.ElementTree.fromstring(xmldoc)
+
     def _build_item(node):
-        date = datetime.strptime(node.find('pubDate').text, '%a, %d %b %Y %H:%M:%S +0800') # Thu, 16 Oct 2014 20:52:51 +0800
-        if format_timedelta:
-            delta = datetime.now() - date
-            date = format_timedelta(delta, locale='en_US')
-        else:
-            date = date.strftime('%m/%d %H:%M')
+        # Thu, 16 Oct 2014 20:52:51 +0800
+        date = datetime.datetime.strptime(node.find('pubDate').text,
+                                          '%a, %d %b %Y %H:%M:%S +0800')
         return dict(
             title=node.find('title').text,
-            date=date, 
+            date=date.strftime('%Y/%y/%m/%d %H:%M'),
             magnet=node.find("enclosure[@type='application/x-bittorrent']").get('url'))
     items = map(_build_item, root.findall('channel/item'))
-    items = filter(lambda x: x['title'], items)
-    return items[:24]
+    items = list(filter(lambda x: x['title'], items))
+
+    idx = 0
+    while items[idx:idx+32]:
+        yield items[idx:idx+32]
+        idx += 32
 
 
 def ask(choices):
@@ -58,25 +56,35 @@ def ask(choices):
         num = t.red(str(idx+1).rjust(2))
         title = t.yellow(item['title'])
         date = t.green(item['date'].rjust(12))
-        print '%s. %s %s' % (num, date, title)
-    answers = raw_input('What items do you like? (seperated by commas) [1] ')
-    if answers: return map(lambda x: int(x)-1, answers.split(r','))
-    else: return [0]
+        print('{}. {} {}'.format(num, date, title))
+
+    answers = input('What items do you like? (seperated by commas) [1] ')
+    return map(lambda x: int(x)-1, answers.split(',')) if answers else [0]
 
 
 def download(items):
     for item in items:
-        print 'Downloading... %s' % (item['title'])
-        webbrowser.open(item['magnet'])
+        #print('Downloading... {}'.format(item['title']))
+        #webbrowser.open(item['magnet'])
+        print(item['title'])
+        print(item['magnet'])
+        print('-'*40)
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 1:
-        print 'Usage: %s <keyword>' % sys.argv[0]
-        print "Example: %s 'Fate stay night' " % sys.argv[1]
+        print('Usage: %s <keyword>'.format(sys.argv[0]))
+        print("Example: %s 'Fate stay night' ".format(sys.argv[1]))
         sys.exit(1)
+
     keyword = sys.argv[1]
-    choices = query(keyword)
-    chosen_ids = ask(choices)
+    result = query(keyword)
+
+    while True:
+        choices = next(result)
+        chosen_ids = ask(choices)
+        if len(choices) != 32 or chosen_ids != [0]:
+            break
+
     chosens = map(lambda idx: choices[idx], chosen_ids)
     download(chosens)
