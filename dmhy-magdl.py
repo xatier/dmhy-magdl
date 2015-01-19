@@ -27,9 +27,12 @@ except ImportError as e:
 t = Terminal()
 
 def query(keyword):
-    url = 'http://share.dmhy.org/topics/rss'
+    url = 'https://share.dmhy.org/topics/rss'
     params = urllib.parse.urlencode(dict(keyword=keyword))
-    xmldoc = urllib.request.urlopen('{}?{}'.format(url, params)).read()
+    print('[+] {}?{}'.format(url, params))
+    req = urllib.request.Request('{}?{}'.format(url, params))
+    req.add_header('User-Agent', 'Chrome/27.0.1453.93')
+    xmldoc = urllib.request.urlopen(req).read()
 
     # parsing items
     root = xml.etree.ElementTree.fromstring(xmldoc)
