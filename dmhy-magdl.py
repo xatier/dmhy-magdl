@@ -9,8 +9,9 @@ import datetime
 import sys
 import urllib.parse
 import urllib.request
-import webbrowser
 import xml.etree.ElementTree
+
+import popcorn
 
 # colorize the output
 try:
@@ -26,15 +27,18 @@ except ImportError as e:
 # globals
 t = Terminal()
 
+
 def query(keyword):
-    url = 'https://share.dmhy.org/topics/rss'
+    # query url
+    url = 'http://share.dmhy.org/topics/rss/rss.xml'
     params = urllib.parse.urlencode(dict(keyword=keyword))
     print('[+] {}?{}'.format(url, params))
+
     req = urllib.request.Request('{}?{}'.format(url, params))
     req.add_header('User-Agent', 'Chrome/27.0.1453.93')
     xmldoc = urllib.request.urlopen(req).read()
 
-    # parsing items
+    # parse items
     root = xml.etree.ElementTree.fromstring(xmldoc)
 
     def _build_item(node):
@@ -44,7 +48,9 @@ def query(keyword):
         return dict(
             title=node.find('title').text,
             date=date.strftime('%Y/%m/%d %H:%M'),
-            magnet=node.find("enclosure[@type='application/x-bittorrent']").get('url'))
+            magnet=node.find("enclosure[@type='application/x-bittorrent']")
+                       .get('url'))
+
     items = map(_build_item, root.findall('channel/item'))
     items = list(filter(lambda x: x['title'], items))
 
@@ -67,15 +73,18 @@ def ask(choices):
 
 def download(items):
     for item in items:
-        #print('Downloading... {}'.format(item['title']))
-        #webbrowser.open(item['magnet'])
+        # import webbrowser
+        # print('Downloading... {}'.format(item['title']))
+        # webbrowser.open(item['magnet'])
         print(item['title'])
         print(item['magnet'])
         print('-'*40)
 
+        popcorn.popcorn_play(item['magnet'])
+
 
 if __name__ == '__main__':
-    if len(sys.argv) < 1:
+    if len(sys.argv) <= 1:
         print('Usage: %s <keyword>'.format(sys.argv[0]))
         print("Example: %s 'Fate stay night' ".format(sys.argv[1]))
         sys.exit(1)
