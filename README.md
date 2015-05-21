@@ -16,5 +16,5 @@ It was a command-downloader for share.dmhy.org from my friend @dannvix
 ![screenshot](screenshot.jpg)
 
 - my fork
-![screenshot2](screenshot2.jpg)
-![screenshot3](screenshot3.jpg)
+![screenshot2](screenshot2.png)
+![screenshot3](screenshot3.png)
