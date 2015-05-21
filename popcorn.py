@@ -59,6 +59,10 @@ def popcorn_play(magnet):
                     "type": ""
                 }}'''.format(magnet))
 
+    # doesn't work currently
+    # send_rpc('getplayers', '{}')
+    # send_rpc('setplayer', '[ "VLC" ]')
+
 
 if __name__ == '__main__':
     popcorn_play('magnet:?xt=urn:btih:AGMTNAVY5XNEB6RT35IYVSJL7YRHCTVS')
